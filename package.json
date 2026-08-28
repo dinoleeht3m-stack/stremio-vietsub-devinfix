@@ -1,0 +1,22 @@
+{
+  "name": "stremio-vietsub",
+  "version": "1.0.0",
+  "description": "Stremio Vietnamese subtitle addon with multi-source support and iOS-compatible server-side proxy",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": ["stremio", "addon", "subtitles", "vietnamese", "proxy", "ios"],
+  "license": "MIT",
+  "dependencies": {
+    "stremio-addon-sdk": "^1.6.10",
+    "express": "^4.18.2",
+    "axios": "^1.6.0",
+    "pako": "^2.1.0",
+    "iconv-lite": "^0.6.3",
+    "chardet": "^2.0.0",
+    "adm-zip": "^0.5.10",
+    "compression": "^1.7.4"
+  }
+}
