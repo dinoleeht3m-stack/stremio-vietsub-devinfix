@@ -6,10 +6,6 @@
 
 const { addonBuilder } = require('stremio-addon-sdk');
 const { searchOpenSubtitles } = require('./providers/opensubtitles');
-const { searchSubDL } = require('./providers/subdl');
-const { searchSubSource } = require('./providers/subsource');
-const { searchYifi } = require('./providers/yifi');
-const { searchPodnapisi } = require('./providers/podnapisi');
 const { resolveToImdb } = require('./lib/tmdb');
 
 /**
@@ -68,7 +64,7 @@ const manifest = {
   id: 'community.vietsub.proxy',
   version: ADDON_VERSION,
   name: '🇻🇳 VietSub Proxy',
-  description: 'Phụ đề Tiếng Việt từ 5 nguồn (OpenSubtitles, SubDL, SubSource, Yifi, Podnapisi). Hỗ trợ nhiều ID formats, xử lý server-side, tương thích 100% iOS.',
+  description: 'Phụ đề Tiếng Việt từ OpenSubtitles.com. Hỗ trợ nhiều ID formats, xử lý server-side, tương thích 100% iOS.',
   resources: ['subtitles'],
   types: ['movie', 'series'],
   idPrefixes: ['tt', 'tm', 'tv'],
@@ -118,34 +114,6 @@ const manifest = {
       title: '🔑 OpenSubtitles API Key (tùy chọn, tạo tại opensubtitles.com)',
       required: false,
     },
-    {
-      key: 'subdlKey',
-      type: 'text',
-      title: '🔑 SubDL API Key (tùy chọn, tạo miễn phí tại subdl.com)',
-      required: false,
-    },
-    {
-      key: 'subsourceKey',
-      type: 'text',
-      title: '🔑 SubSource API Key (tùy chọn, tạo miễn phí tại subsource.net)',
-      required: false,
-    },
-    {
-      key: 'enableYifi',
-      type: 'select',
-      title: '📥 Yifi Subtitles (miễn phí)',
-      options: ['Bật', 'Tắt'],
-      required: false,
-      default: 'Bật',
-    },
-    {
-      key: 'enablePodnapisi',
-      type: 'select',
-      title: '📥 Podnapisi (miễn phí)',
-      options: ['Bật', 'Tắt'],
-      required: false,
-      default: 'Bật',
-    },
   ],
 };
 
@@ -160,16 +128,12 @@ function parseConfig(configStr) {
   const config = {
     lang: 'vie',
     opensubsKey: '',
-    subdlKey: '',
-    subsourceKey: '',
     tmdbUser: '',
     tmdbSession: '',
     tmdbPass: '',
     osUser: '',
     osToken: '',
     osPass: '',
-    enableYifi: 'Bật',
-    enablePodnapisi: 'Bật',
   };
 
   if (!configStr) return config;
@@ -183,16 +147,12 @@ function parseConfig(configStr) {
       config.lang = match ? match[1] : parsed.lang;
     }
     if (parsed.opensubsKey) config.opensubsKey = parsed.opensubsKey;
-    if (parsed.subdlKey) config.subdlKey = parsed.subdlKey;
-    if (parsed.subsourceKey) config.subsourceKey = parsed.subsourceKey;
     if (parsed.tmdbUser) config.tmdbUser = parsed.tmdbUser;
     if (parsed.tmdbSession) config.tmdbSession = parsed.tmdbSession;
     if (parsed.tmdbPass) config.tmdbPass = parsed.tmdbPass;
     if (parsed.osUser) config.osUser = parsed.osUser;
     if (parsed.osToken) config.osToken = parsed.osToken;
     if (parsed.osPass) config.osPass = parsed.osPass;
-    if (parsed.enableYifi) config.enableYifi = parsed.enableYifi;
-    if (parsed.enablePodnapisi) config.enablePodnapisi = parsed.enablePodnapisi;
   } catch (e) {
     // Try pipe-delimited format
     const parts = configStr.split('|');
@@ -201,16 +161,12 @@ function parseConfig(configStr) {
       const value = rest.join('=');
       if (key === 'lang') config.lang = value;
       if (key === 'opensubsKey') config.opensubsKey = value;
-      if (key === 'subdlKey') config.subdlKey = value;
-      if (key === 'subsourceKey') config.subsourceKey = value;
       if (key === 'tmdbUser') config.tmdbUser = value;
       if (key === 'tmdbSession') config.tmdbSession = value;
       if (key === 'tmdbPass') config.tmdbPass = value;
       if (key === 'osUser') config.osUser = value;
       if (key === 'osToken') config.osToken = value;
       if (key === 'osPass') config.osPass = value;
-      if (key === 'enableYifi') config.enableYifi = value;
-      if (key === 'enablePodnapisi') config.enablePodnapisi = value;
     }
   }
 
@@ -268,16 +224,12 @@ async function searchSubtitles(type, id, addonConfig) {
     config.lang = match ? match[1] : (addonConfig.lang || 'vie');
   }
   if (addonConfig && addonConfig.opensubsKey) config.opensubsKey = addonConfig.opensubsKey;
-  if (addonConfig && addonConfig.subdlKey) config.subdlKey = addonConfig.subdlKey;
-  if (addonConfig && addonConfig.subsourceKey) config.subsourceKey = addonConfig.subsourceKey;
   if (addonConfig && addonConfig.tmdbUser) config.tmdbUser = addonConfig.tmdbUser;
   if (addonConfig && addonConfig.tmdbSession) config.tmdbSession = addonConfig.tmdbSession;
   if (addonConfig && addonConfig.tmdbPass) config.tmdbPass = addonConfig.tmdbPass;
   if (addonConfig && addonConfig.osUser) config.osUser = addonConfig.osUser;
   if (addonConfig && addonConfig.osToken) config.osToken = addonConfig.osToken;
   if (addonConfig && addonConfig.osPass) config.osPass = addonConfig.osPass;
-  if (addonConfig && addonConfig.enableYifi) config.enableYifi = addonConfig.enableYifi;
-  if (addonConfig && addonConfig.enablePodnapisi) config.enablePodnapisi = addonConfig.enablePodnapisi;
 
   const parsed = parseStremioId(id);
   var season = parsed.season;
@@ -323,50 +275,6 @@ async function searchSubtitles(type, id, addonConfig) {
         return [];
       })
   );
-
-  // SubDL — only if key provided
-  if (config.subdlKey) {
-    promises.push(
-      searchSubDL(imdbId, type, langCode, { ...providerOptions, apiKey: config.subdlKey })
-        .catch(function(err) {
-          console.error('[addon] SubDL failed:', err.message);
-          return [];
-        })
-    );
-  }
-
-  // SubSource — only if key provided
-  if (config.subsourceKey) {
-    promises.push(
-      searchSubSource(imdbId, type, langCode, { ...providerOptions, apiKey: config.subsourceKey })
-        .catch(function(err) {
-          console.error('[addon] SubSource failed:', err.message);
-          return [];
-        })
-    );
-  }
-
-  // Yifi — enabled for movies if not disabled in config (free, no API key needed)
-  if (type === 'movie' && config.enableYifi !== 'Tắt') {
-    promises.push(
-      searchYifi(imdbId, type, langCode, providerOptions)
-        .catch(function(err) {
-          console.error('[addon] Yifi failed:', err.message);
-          return [];
-        })
-    );
-  }
-
-  // Podnapisi — enabled if not disabled in config (free, no API key needed)
-  if (config.enablePodnapisi !== 'Tắt') {
-    promises.push(
-      searchPodnapisi(imdbId, type, langCode, providerOptions)
-        .catch(function(err) {
-          console.error('[addon] Podnapisi failed:', err.message);
-          return [];
-        })
-    );
-  }
 
   // Wait for all providers
   const results = await Promise.all(promises);

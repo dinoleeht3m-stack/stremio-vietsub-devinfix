@@ -522,7 +522,7 @@ function generateConfigPage(baseUrl) {
 '    #osPingStatus { font-size:13px; line-height:1.4; min-height:1.4em; font-weight:600; }\n' +
 '    #osPingDetails { font-size:12px; line-height:1.5; }\n' +
 '    #osPingDetails strong { color: var(--text-primary); }\n' +
-'    @media (max-width:600px) { .tmdb-grid { grid-template-columns:1fr; } }\n' +
+ +
 '    .steps { display:flex; flex-direction:column; gap:12px; }\n' +
 '    .step { display:flex; gap:12px; align-items:flex-start; }\n' +
 '    .step-num {\n' +
@@ -542,10 +542,10 @@ function generateConfigPage(baseUrl) {
 '    <div class="header">\n' +
 '      <div class="logo">\xF0\x9F\x87\xBB\xF0\x9F\x87\xB3</div>\n' +
 '      <h1>VietSub Proxy</h1>\n' +
-'      <p>Addon ph\u1EE5 \u0111\u1EC7 cho Stremio \u2014 5 ngu\u1ED3n, \u0111a ID format, x\u1EED l\u00FD server-side, t\u01B0\u01A1ng th\u00EDch 100% iOS</p>\n' +
+'      <p>Addon ph\u1EE5 \u0111\u1EC7 cho Stremio \u2014 OpenSubtitles.com, \u0111a ID format, x\u1EED l\u00FD server-side, t\u01B0\u01A1ng th\u00EDch 100% iOS</p>\n' +
 '      <div class="badge-row">\n' +
 '        <span class="badge ios">\u2705 iOS Compatible</span>\n' +
-'        <span class="badge sources">\uD83D\uDD0C 5 Sources</span>\n' +
+'        <span class="badge sources">\uD83D\uDD0C OpenSubtitles</span>\n' +
 '        <span class="badge">\uD83D\uDCE1 Proxy Server</span>\n' +
 '      </div>\n' +
 '    </div>\n' +
@@ -601,70 +601,13 @@ function generateConfigPage(baseUrl) {
 '        </div>\n' +
 '        <div class="hint" style="margin:0">Dùng Auth OpenSubtitles.com phía trên. Không cần dán API key.</div>\n' +
 '      </div>\n' +
-'      <div class="provider" style="flex-direction:column;align-items:stretch;">\n' +
-'        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">\n' +
-'          <div class="provider-info">\n' +
-'            <span>\uD83D\uDCE6</span>\n' +
-'            <span class="provider-name">SubDL</span>\n' +
-'            <span class="provider-tag key">API Key</span>\n' +
-'          </div>\n' +
-'        </div>\n' +
-'        <div class="field" style="margin-bottom:0">\n' +
-'          <input type="text" id="subdlKey" placeholder="Nh\u1EADp API key SubDL (t\u00F9y ch\u1ECDn)">\n' +
-'          <div class="hint">T\u1EA1o key mi\u1EC5n ph\u00ED t\u1EA1i <a href="https://subdl.com" target="_blank">subdl.com</a> \u2192 Profile \u2192 API Key</div>\n' +
-'        </div>\n' +
-'      </div>\n' +
-'      <div class="provider" style="flex-direction:column;align-items:stretch;">\n' +
-'        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">\n' +
-'          <div class="provider-info">\n' +
-'            <span>\uD83D\uDCE6</span>\n' +
-'            <span class="provider-name">SubSource</span>\n' +
-'            <span class="provider-tag key">API Key</span>\n' +
-'          </div>\n' +
-'        </div>\n' +
-'        <div class="field" style="margin-bottom:0">\n' +
-'          <input type="text" id="subsourceKey" placeholder="Nh\u1EADp API key SubSource (t\u00F9y ch\u1ECDn)">\n' +
-'          <div class="hint">T\u1EA1o key mi\u1EC5n ph\u00ED t\u1EA1i <a href="https://subsource.net" target="_blank">subsource.net</a> \u2192 My Profile \u2192 API Key</div>\n' +
-'        </div>\n' +
-'      </div>\n' +
-'      <div class="provider" style="flex-direction:column;align-items:stretch;">\n' +
-'        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">\n' +
-'          <div class="provider-info">\n' +
-'            <span>\uD83D\uDCE6</span>\n' +
-'            <span class="provider-name">Yifi Subtitles</span>\n' +
-'            <span class="provider-tag free">Mi\u1EC5n ph\u00ED</span>\n' +
-'          </div>\n' +
-'        </div>\n' +
-'        <div class="field" style="margin-bottom:0">\n' +
-'          <div class="toggle-group">\n' +
-'            <button class="toggle-btn active" id="yifiOn" onclick="toggleProvider(\'yifi\', true)">Bật</button>\n' +
-'            <button class="toggle-btn" id="yifiOff" onclick="toggleProvider(\'yifi\', false)">Tắt</button>\n' +
-'          </div>\n' +
-'          <div class="hint">T\u1EF1 \u0111\u1ED9ng t\u00ECm ki\u1EBFm cho phim kh\u00F4ng c\u1EA7n API key. Ch\u1EE9 ho\u1EA1t \u0111\u1ED9ng v\u1EDBi phim.</div>\n' +
-'        </div>\n' +
-'      </div>\n' +
-'      <div class="provider" style="flex-direction:column;align-items:stretch;">\n' +
-'        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">\n' +
-'          <div class="provider-info">\n' +
-'            <span>\uD83D\uDCE6</span>\n' +
-'            <span class="provider-name">Podnapisi</span>\n' +
-'            <span class="provider-tag free">Mi\u1EC5n ph\u00ED</span>\n' +
-'          </div>\n' +
-'        </div>\n' +
-'        <div class="field" style="margin-bottom:0">\n' +
-'          <div class="toggle-group">\n' +
-'            <button class="toggle-btn active" id="podnapisiOn" onclick="toggleProvider(\'podnapisi\', true)">Bật</button>\n' +
-'            <button class="toggle-btn" id="podnapisiOff" onclick="toggleProvider(\'podnapisi\', false)">Tắt</button>\n' +
-'          </div>\n' +
-'          <div class="hint">T\u1EF1 \u0111\u1ED9ng t\u00ECm ki\u1EBFm cho phim v\u00E0 series kh\u00F4ng c\u1EA7n API key.</div>\n' +
-'        </div>\n' +
-'      </div>\n' +
+ +
 '    </div>\n' +
 '    <div class="card">\n' +
 '      <div class="card-title"><span class="icon">\u2699\uFE0F</span> C\u00E1ch ho\u1EA1t \u0111\u1ED9ng</div>\n' +
 '      <div class="steps">\n' +
 '        <div class="step"><div class="step-num">1</div><div class="step-text">Khi b\u1EA1n xem phim, Stremio g\u1EEDi ID phim \u0111\u1EBFn server addon</div></div>\n' +
-'        <div class="step"><div class="step-num">2</div><div class="step-text">Server t\u1EA3i ph\u1EE5 \u0111\u1EC7 t\u1EEB 5 ngu\u1ED3n (OpenSubs, SubDL, SubSource, Yifi, Podnapisi)</div></div>\n' +
+'        <div class="step"><div class="step-num">2</div><div class="step-text">Server t\u1EA3i ph\u1EE5 \u0111\u1EC7 t\u1EEB OpenSubtitles.com</div></div>\n' +
 '        <div class="step"><div class="step-num">3</div><div class="step-text">Server x\u1EED l\u00FD: gi\u1EA3i n\u00E9n \u2192 chuy\u1EC3n encoding UTF-8 \u2192 strip \u0111\u1ECBnh d\u1EA1ng l\u1ED7i \u2192 t\u1EA1o file .srt s\u1EA1ch</div></div>\n' +
 '        <div class="step"><div class="step-num">4</div><div class="step-text">iOS nh\u1EADn file s\u1EA1ch qua domain addon \u2192 hi\u1EC3n th\u1ECB m\u01B0\u1EE3t m\u00E0, kh\u00F4ng l\u1ED7i Invalid \u2705</div></div>\n' +
 '      </div>\n' +
@@ -677,28 +620,22 @@ function generateConfigPage(baseUrl) {
 '    </div>\n' +
 '    <div class="footer">\n' +
 '      <p>VietSub Proxy v' + manifest.version + ' \u2014 Made with \u2764\uFE0F for Vietnamese Stremio users</p>\n' +
-'      <p style="margin-top:4px;">Powered by OpenSubtitles, SubDL, SubSource, Yifi, Podnapisi</p>\n' +
+'      <p style="margin-top:4px;">Powered by OpenSubtitles</p>\n' +
 '    </div>\n' +
 '  </div>\n' +
 '  <script>\n' +
 '    var osToken = "";\n' +
 '    function buildManifestUrl() {\n' +
 '      var lang = document.getElementById("lang").value;\n' +
-'      var subdlKey = document.getElementById("subdlKey").value.trim();\n' +
-'      var subsourceKey = document.getElementById("subsourceKey").value.trim();\n' +
 '      var osUser = document.getElementById("osUser").value.trim();\n' +
 '      var osPass = document.getElementById("osPass").value;\n' +
 '      var config = {};\n' +
 '      var langSelect = document.getElementById("lang");\n' +
 '      var langText = langSelect.options[langSelect.selectedIndex].text;\n' +
 '      config.lang = langText + " [" + lang + "]";\n' +
-'      if (subdlKey) config.subdlKey = subdlKey;\n' +
-'      if (subsourceKey) config.subsourceKey = subsourceKey;\n' +
 '      if (osUser) config.osUser = osUser;\n' +
 '      if (osToken) config.osToken = osToken;\n' +
 '      else if (osPass) config.osPass = osPass;\n' +
-'      config.enableYifi = document.getElementById("yifiOn").classList.contains("active") ? "Bật" : "Tắt";\n' +
-'      config.enablePodnapisi = document.getElementById("podnapisiOn").classList.contains("active") ? "Bật" : "Tắt";\n' +
 '      var configStr = encodeURIComponent(JSON.stringify(config));\n' +
 '      var baseUrl = window.location.origin;\n' +
 '      return baseUrl + "/" + configStr + "/manifest.json";\n' +
@@ -797,17 +734,6 @@ function generateConfigPage(baseUrl) {
 '        window.getSelection().removeAllRanges();\n' +
 '        window.getSelection().addRange(range);\n' +
 '      });\n' +
-'    }\n' +
-'    function toggleProvider(provider, enabled) {\n' +
-'      var onBtn = document.getElementById(provider + "On");\n' +
-'      var offBtn = document.getElementById(provider + "Off");\n' +
-'      if (enabled) {\n' +
-'        onBtn.classList.add("active");\n' +
-'        offBtn.classList.remove("active");\n' +
-'      } else {\n' +
-'        onBtn.classList.remove("active");\n' +
-'        offBtn.classList.add("active");\n' +
-'      }\n' +
 '    }\n' +
 '  </script>\n' +
 '</body>\n' +
