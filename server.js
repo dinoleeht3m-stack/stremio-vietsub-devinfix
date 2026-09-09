@@ -39,7 +39,7 @@ const compression = require('compression');
 const { getRouter } = require('stremio-addon-sdk');
 const { builder, manifest, searchSubtitles, getLanguageName, LANGUAGES } = require('./addon');
 const { proxySubtitle } = require('./lib/proxy');
-const { pingOpenSubtitles, getAppApiKey } = require('./providers/opensubtitles');
+const { getAppApiKey } = require('./providers/opensubtitles');
 
 // Configuration
 const PORT = process.env.PORT || 7000;

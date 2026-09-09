@@ -263,4 +263,4 @@ async function searchOpenSubtitles(imdbId, type, langCode, options) {
   }
 }
 
-module.exports = { searchOpenSubtitles, pingOpenSubtitles, getAppApiKey };
+module.exports = { searchOpenSubtitles, getAppApiKey };
