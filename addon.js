@@ -10,6 +10,7 @@ const { searchSubDL } = require('./providers/subdl');
 const { searchSubSource } = require('./providers/subsource');
 const { searchYifi } = require('./providers/yifi');
 const { searchPodnapisi } = require('./providers/podnapisi');
+const { resolveToImdb } = require('./lib/tmdb');
 
 /**
  * Supported languages list (common ones, Vietnamese first).
@@ -100,6 +101,18 @@ const manifest = {
       default: 'Tiếng Việt [vie]',
     },
     {
+      key: 'osUser',
+      type: 'text',
+      title: 'OpenSubtitles.com Username',
+      required: false,
+    },
+    {
+      key: 'osToken',
+      type: 'text',
+      title: 'OpenSubtitles token (sau Test Credentials)',
+      required: false,
+    },
+    {
       key: 'opensubsKey',
       type: 'text',
       title: '🔑 OpenSubtitles API Key (tùy chọn, tạo tại opensubtitles.com)',
@@ -149,6 +162,12 @@ function parseConfig(configStr) {
     opensubsKey: '',
     subdlKey: '',
     subsourceKey: '',
+    tmdbUser: '',
+    tmdbSession: '',
+    tmdbPass: '',
+    osUser: '',
+    osToken: '',
+    osPass: '',
     enableYifi: 'Bật',
     enablePodnapisi: 'Bật',
   };
@@ -166,6 +185,12 @@ function parseConfig(configStr) {
     if (parsed.opensubsKey) config.opensubsKey = parsed.opensubsKey;
     if (parsed.subdlKey) config.subdlKey = parsed.subdlKey;
     if (parsed.subsourceKey) config.subsourceKey = parsed.subsourceKey;
+    if (parsed.tmdbUser) config.tmdbUser = parsed.tmdbUser;
+    if (parsed.tmdbSession) config.tmdbSession = parsed.tmdbSession;
+    if (parsed.tmdbPass) config.tmdbPass = parsed.tmdbPass;
+    if (parsed.osUser) config.osUser = parsed.osUser;
+    if (parsed.osToken) config.osToken = parsed.osToken;
+    if (parsed.osPass) config.osPass = parsed.osPass;
     if (parsed.enableYifi) config.enableYifi = parsed.enableYifi;
     if (parsed.enablePodnapisi) config.enablePodnapisi = parsed.enablePodnapisi;
   } catch (e) {
@@ -178,6 +203,12 @@ function parseConfig(configStr) {
       if (key === 'opensubsKey') config.opensubsKey = value;
       if (key === 'subdlKey') config.subdlKey = value;
       if (key === 'subsourceKey') config.subsourceKey = value;
+      if (key === 'tmdbUser') config.tmdbUser = value;
+      if (key === 'tmdbSession') config.tmdbSession = value;
+      if (key === 'tmdbPass') config.tmdbPass = value;
+      if (key === 'osUser') config.osUser = value;
+      if (key === 'osToken') config.osToken = value;
+      if (key === 'osPass') config.osPass = value;
       if (key === 'enableYifi') config.enableYifi = value;
       if (key === 'enablePodnapisi') config.enablePodnapisi = value;
     }
@@ -239,10 +270,33 @@ async function searchSubtitles(type, id, addonConfig) {
   if (addonConfig && addonConfig.opensubsKey) config.opensubsKey = addonConfig.opensubsKey;
   if (addonConfig && addonConfig.subdlKey) config.subdlKey = addonConfig.subdlKey;
   if (addonConfig && addonConfig.subsourceKey) config.subsourceKey = addonConfig.subsourceKey;
+  if (addonConfig && addonConfig.tmdbUser) config.tmdbUser = addonConfig.tmdbUser;
+  if (addonConfig && addonConfig.tmdbSession) config.tmdbSession = addonConfig.tmdbSession;
+  if (addonConfig && addonConfig.tmdbPass) config.tmdbPass = addonConfig.tmdbPass;
+  if (addonConfig && addonConfig.osUser) config.osUser = addonConfig.osUser;
+  if (addonConfig && addonConfig.osToken) config.osToken = addonConfig.osToken;
+  if (addonConfig && addonConfig.osPass) config.osPass = addonConfig.osPass;
   if (addonConfig && addonConfig.enableYifi) config.enableYifi = addonConfig.enableYifi;
   if (addonConfig && addonConfig.enablePodnapisi) config.enablePodnapisi = addonConfig.enablePodnapisi;
 
-  const { imdbId, season, episode, originalId } = parseStremioId(id);
+  const parsed = parseStremioId(id);
+  var season = parsed.season;
+  var episode = parsed.episode;
+  var originalId = parsed.originalId;
+  var imdbId = parsed.imdbId;
+
+  if (originalId.indexOf('tm') === 0 || originalId.indexOf('tv') === 0) {
+    try {
+      var resolved = await resolveToImdb(originalId, type);
+      if (resolved) {
+        imdbId = String(resolved).replace(/^tt/, '');
+        console.log('[addon] TMDB resolved ' + originalId + ' -> tt' + imdbId);
+      }
+    } catch (resolveErr) {
+      console.error('[addon] TMDB resolve error:', resolveErr.message);
+    }
+  }
+
   const langCode = config.lang || 'vie';
 
   const providerOptions = {
@@ -256,7 +310,14 @@ async function searchSubtitles(type, id, addonConfig) {
 
   // OpenSubtitles — always enabled, better results with API key
   promises.push(
-    searchOpenSubtitles(imdbId, type, langCode, { ...providerOptions, apiKey: config.opensubsKey || '' })
+    searchOpenSubtitles(imdbId, type, langCode, {
+      ...providerOptions,
+      apiKey: config.opensubsKey || '',
+      osUser: config.osUser || '',
+      osPass: config.osPass || '',
+      osToken: config.osToken || '',
+      tmdbId: originalId.indexOf('tm') === 0 ? originalId.replace(/^tm/, '') : '',
+    })
       .catch(function(err) {
         console.error('[addon] OpenSubtitles failed:', err.message);
         return [];
