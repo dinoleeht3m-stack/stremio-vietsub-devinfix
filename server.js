@@ -603,7 +603,6 @@ function generateConfigPage(baseUrl) {
 '      }\n' +
 '    }\n' +
 '    window.buildManifestUrl = buildManifestUrl;\n' +
- +
 '    function installAddon() {\n' +
 '      console.log("installAddon called");\n' +
 '      try {\n' +
