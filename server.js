@@ -602,25 +602,44 @@ function generateConfigPage(baseUrl) {
 '    }\n' +
  +
 '    function installAddon() {\n' +
-'      var manifestUrl = buildManifestUrl();\n' +
-'      var stremioUrl = manifestUrl.replace(/^https?:\\/\\//, "stremio://");\n' +
-'      window.location.href = stremioUrl;\n' +
+'      try {\n' +
+'        var manifestUrl = buildManifestUrl();\n' +
+'        if (!manifestUrl) {\n' +
+'          alert("Lỗi khi tạo manifest URL. Vui lòng thử lại.");\n' +
+'          return;\n' +
+'        }\n' +
+'        var stremioUrl = manifestUrl.replace(/^https?:\\/\\//, "stremio://");\n' +
+'        console.log("Installing addon with URL:", stremioUrl);\n' +
+'        window.location.href = stremioUrl;\n' +
+'      } catch (e) {\n' +
+'        console.error("Install error:", e);\n' +
+'        alert("Lỗi khi cài addon: " + e.message);\n' +
+'      }\n' +
 '    }\n' +
 '    function copyLink() {\n' +
-'      var manifestUrl = buildManifestUrl();\n' +
-'      var urlDisplay = document.getElementById("manifestUrl");\n' +
-'      urlDisplay.textContent = manifestUrl;\n' +
-'      urlDisplay.style.display = "block";\n' +
-'      navigator.clipboard.writeText(manifestUrl).then(function() {\n' +
-'        var btn = document.querySelector(".copy-btn");\n' +
-'        btn.textContent = "\\u2705 \\u0110\\u00E3 copy!";\n' +
-'        setTimeout(function() { btn.textContent = "\\uD83D\\uDCCB Copy link manifest"; }, 2000);\n' +
-'      }).catch(function() {\n' +
-'        var range = document.createRange();\n' +
-'        range.selectNode(urlDisplay);\n' +
-'        window.getSelection().removeAllRanges();\n' +
-'        window.getSelection().addRange(range);\n' +
-'      });\n' +
+'      try {\n' +
+'        var manifestUrl = buildManifestUrl();\n' +
+'        if (!manifestUrl) {\n' +
+'          alert("Lỗi khi tạo manifest URL. Vui lòng thử lại.");\n' +
+'          return;\n' +
+'        }\n' +
+'        var urlDisplay = document.getElementById("manifestUrl");\n' +
+'        urlDisplay.textContent = manifestUrl;\n' +
+'        urlDisplay.style.display = "block";\n' +
+'        navigator.clipboard.writeText(manifestUrl).then(function() {\n' +
+'          var btn = document.querySelector(".copy-btn");\n' +
+'          btn.textContent = "\\u2705 \\u0110\\u00E3 copy!";\n' +
+'          setTimeout(function() { btn.textContent = "\\uD83D\\uDCCB Copy link manifest"; }, 2000);\n' +
+'        }).catch(function() {\n' +
+'          var range = document.createRange();\n' +
+'          range.selectNode(urlDisplay);\n' +
+'          window.getSelection().removeAllRanges();\n' +
+'          window.getSelection().addRange(range);\n' +
+'        });\n' +
+'      } catch (e) {\n' +
+'        console.error("Copy error:", e);\n' +
+'        alert("Lỗi khi copy link: " + e.message);\n' +
+'      }\n' +
 '    }\n' +
 '  </script>\n' +
 '</body>\n' +
