@@ -582,7 +582,6 @@ function generateConfigPage(baseUrl) {
 '    </div>\n' +
 '  </div>\n' +
 '  <script>\n' +
-'    var osToken = "";\n' +
 '    function buildManifestUrl() {\n' +
 '      try {\n' +
 '        var lang = document.getElementById("lang").value;\n' +
@@ -594,9 +593,12 @@ function generateConfigPage(baseUrl) {
 '        if (opensubsKey) config.opensubsKey = opensubsKey;\n' +
 '        var configStr = encodeURIComponent(JSON.stringify(config));\n' +
 '        var baseUrl = window.location.origin;\n' +
-'        return baseUrl + "/" + configStr + "/manifest.json";\n' +
+'        var manifestUrl = baseUrl + "/" + configStr + "/manifest.json";\n' +
+'        console.log("Generated manifest URL:", manifestUrl);\n' +
+'        return manifestUrl;\n' +
 '      } catch (e) {\n' +
 '        console.error("buildManifestUrl error:", e);\n' +
+'        alert("Lỗi khi tạo manifest URL: " + e.message);\n' +
 '        return "";\n' +
 '      }\n' +
 '    }\n' +
