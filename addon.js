@@ -99,7 +99,7 @@ const manifest = {
     {
       key: 'opensubsKey',
       type: 'text',
-      title: '🔑 OpenSubtitles API Key (tùy chọn, tạo tại opensubtitles.com)',
+      title: '🔑 OpenSubtitles API Key (tùy chọn)',
       required: false,
     },
   ],

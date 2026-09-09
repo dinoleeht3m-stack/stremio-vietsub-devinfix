@@ -539,20 +539,11 @@ function generateConfigPage(baseUrl) {
 '      </div>\n' +
 '    </div>\n' +
 '    <div class="card">\n' +
-'      <div class="card-title"><span class="icon">\uD83D\uDCC4</span> OpenSubtitles (Auth)</div>\n' +
+'      <div class="card-title"><span class="icon">\uD83D\uDCC4</span> OpenSubtitles</div>\n' +
 '      <div class="field">\n' +
-'        <label>API Key</label>\n' +
-'        <input type="text" id="opensubsKey" placeholder="Nhập API Key">\n' +
-'        <div class="hint">Tạo API Key tại <a href="https://www.opensubtitles.com/consumers" target="_blank">opensubtitles.com/consumers</a></div>\n' +
-'      </div>\n' +
-'      <div class="field">\n' +
-'        <label>Username</label>\n' +
-'        <input type="text" id="osUser" autocomplete="username" placeholder="Username">\n' +
-'      </div>\n' +
-'      <div class="field">\n' +
-'        <label>Password</label>\n' +
-'        <input type="password" id="osPass" autocomplete="current-password">\n' +
-'        <div class="hint">Cần cả API Key, Username và Password để sử dụng OpenSubtitles REST API.</div>\n' +
+'        <label>API Key (tùy chọn)</label>\n' +
+'        <input type="text" id="opensubsKey" placeholder="Nhập API Key (tùy chọn)">\n' +
+'        <div class="hint">Dùng Stremio V3 proxy mặc định (không cần nhập). API key tùy chọn để có thêm kết quả từ official API. Tạo key tại <a href="https://www.opensubtitles.com/consumers" target="_blank">opensubtitles.com/consumers</a></div>\n' +
 '      </div>\n' +
 '    </div>\n' +
 '    <div class="card">\n' +
