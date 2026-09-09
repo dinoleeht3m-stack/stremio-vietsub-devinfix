@@ -166,7 +166,7 @@ app.post('/api/opensubtitles/test', async function(req, res) {
   
   if (!result.ok) {
     var status = 401;
-    if (result.code === 'no_api_key' || result.code === 'xmlrpc_disabled' || result.code === 'xmlrpc_html_response') status = 503;
+    if (result.code === 'api_key_required') status = 403;
     if (result.code === 'missing_credentials') status = 400;
     return res.status(status).json(result);
   }

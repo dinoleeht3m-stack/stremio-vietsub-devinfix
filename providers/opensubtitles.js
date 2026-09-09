@@ -8,19 +8,11 @@ const axios = require('axios');
 
 const STREMIO_PROXY_URL = 'https://opensubtitles-v3.strem.io/subtitles';
 const OFFICIAL_API_URL = 'https://api.opensubtitles.com/api/v1';
-const XMLRPC_URL = 'https://api.opensubtitles.org/xml-rpc';
 const USER_AGENT = 'StremioVietSub v1.0.0';
 const loginCache = new Map();
 
 function getAppApiKey(userKey) {
   return String(userKey || process.env.OPENSUBTITLES_API_KEY || process.env.OS_API_KEY || '').trim();
-}
-
-function xmlEscape(value) {
-  return String(value || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
 }
 
 function osErrorMessage(err) {
@@ -33,62 +25,9 @@ function osErrorMessage(err) {
   return err.message || 'Ping OpenSubtitles thất bại.';
 }
 
-async function pingViaXmlRpc(username, password) {
-  var body = '<?xml version="1.0"?>' +
-    '<methodCall><methodName>LogIn</methodName><params>' +
-    '<param><value><string>' + xmlEscape(username) + '</string></value></param>' +
-    '<param><value><string>' + xmlEscape(password) + '</string></value></param>' +
-    '<param><value><string>en</string></value></param>' +
-    '<param><value><string>' + USER_AGENT + '</string></value></param>' +
-    '</params></methodCall>';
-
-  console.log('[opensubtitles] Trying XML-RPC login to:', XMLRPC_URL);
-  
-  var res = await axios.post(XMLRPC_URL, body, {
-    timeout: 15000,
-    headers: {
-      'Content-Type': 'text/xml',
-      'User-Agent': USER_AGENT,
-    },
-    responseType: 'text',
-    validateStatus: function() { return true; },
-  });
-
-  var text = String(res.data || '');
-  console.log('[opensubtitles] XML-RPC response status:', res.status);
-  console.log('[opensubtitles] XML-RPC response (first 200 chars):', text.substring(0, 200));
-  
-  // Check if response is HTML instead of XML
-  if (text.trim().toLowerCase().startsWith('<!doctype') || text.trim().toLowerCase().startsWith('<html')) {
-    console.error('[opensubtitles] XML-RPC returned HTML instead of XML');
-    return { ok: false, error: 'OpenSubtitles XML-RPC endpoint không còn hoạt động hoặc đã thay đổi.', code: 'xmlrpc_html_response' };
-  }
-  
-  var statusMatch = text.match(/<name>status<\/name>\s*<value>(?:<string>)?([^<]+)/i);
-  var tokenMatch = text.match(/<name>token<\/name>\s*<value>(?:<string>)?([^<]+)/i);
-  var status = statusMatch ? String(statusMatch[1]).trim() : '';
-  var token = tokenMatch ? String(tokenMatch[1]).trim() : '';
-
-  console.log('[opensubtitles] Parsed status:', status);
-  console.log('[opensubtitles] Parsed token:', token ? 'found' : 'not found');
-
-  // OpenSubtitles XML-RPC returns token on success regardless of status
-  if (token) {
-    return { ok: true, token: token, username: username, via: 'xmlrpc' };
-  }
-  if (/401|Unauthorized|Wrong username|invalid/i.test(text + ' ' + status)) {
-    return { ok: false, error: 'Sai username hoặc password OpenSubtitles.com.', code: 'unauthorized' };
-  }
-  if (/disabled|no longer|obsolete|unavailable/i.test(text + ' ' + status)) {
-    return { ok: false, error: status || 'OpenSubtitles XML-RPC không còn hỗ trợ tài khoản này.', code: 'xmlrpc_disabled' };
-  }
-  return { ok: false, error: status || 'Ping OpenSubtitles thất bại.', code: 'xmlrpc_error' };
-}
-
 /**
  * Validate OpenSubtitles.com username/password (Test Credentials).
- * Uses REST /login when the addon has a consumer API key (env or optional user key),
- * otherwise falls back to XML-RPC LogIn so the form never asks for an API key.
+ * Uses REST /login with username/password only (no API key required for basic auth).
  */
 async function pingOpenSubtitles(username, password, apiKey) {
   username = String(username || '').trim();
@@ -98,53 +37,48 @@ async function pingOpenSubtitles(username, password, apiKey) {
   }
 
   var key = getAppApiKey(apiKey);
-  if (key) {
-    try {
-      var res = await axios.post(OFFICIAL_API_URL + '/login', {
-        username: username,
-        password: password,
-      }, {
-        timeout: 15000,
-        headers: {
-          'User-Agent': USER_AGENT,
-          'Api-Key': key,
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-      });
-      var token = res.data && res.data.token;
-      var user = (res.data && res.data.user) || {};
-      if (!token) {
-        return { ok: false, error: 'Đăng nhập thành công nhưng không nhận được token.', code: 'token' };
-      }
-      loginCache.set(username, { token: token, apiKey: key, at: Date.now() });
-      return {
-        ok: true,
-        token: token,
-        username: user.username || username,
-        allowedDownloads: user.allowed_downloads,
-        vip: Boolean(user.vip),
-        via: 'rest',
-      };
-    } catch (err) {
-      var status = err.response && err.response.status;
-      if (status === 401) {
-        return { ok: false, error: 'Sai username hoặc password OpenSubtitles.com.', code: 'unauthorized' };
-      }
-      console.error('[opensubtitles] REST login failed:', osErrorMessage(err));
-    }
-  }
-
+  
   try {
-    return await pingViaXmlRpc(username, password);
-  } catch (err) {
-    if (!key) {
-      return {
-        ok: false,
-        error: 'Không ping được OpenSubtitles.com. Đặt OPENSUBTITLES_API_KEY một lần trên server (API Consumers), không nhập trên form.',
-        code: 'no_api_key',
-      };
+    var headers = {
+      'User-Agent': USER_AGENT,
+      'Api-Key': key || '', // Empty string if no key
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    };
+    
+    var res = await axios.post(OFFICIAL_API_URL + '/login', {
+      username: username,
+      password: password,
+    }, {
+      timeout: 15000,
+      headers: headers,
+    });
+    
+    var token = res.data && res.data.token;
+    var user = (res.data && res.data.user) || {};
+    
+    if (!token) {
+      return { ok: false, error: 'Đăng nhập thành công nhưng không nhận được token.', code: 'token' };
     }
+    
+    loginCache.set(username, { token: token, apiKey: key, at: Date.now() });
+    return {
+      ok: true,
+      token: token,
+      username: user.username || username,
+      allowedDownloads: user.allowed_downloads,
+      vip: Boolean(user.vip),
+      via: 'rest',
+    };
+  } catch (err) {
+    var status = err.response && err.response.status;
+    if (status === 401) {
+      return { ok: false, error: 'Sai username hoặc password OpenSubtitles.com.', code: 'unauthorized' };
+    }
+    if (status === 403) {
+      return { ok: false, error: 'Cần API Key để sử dụng OpenSubtitles API. Vui lòng tạo API Key tại opensubtitles.com/consumers', code: 'api_key_required' };
+    }
+    console.error('[opensubtitles] REST login failed:', osErrorMessage(err));
     return { ok: false, error: osErrorMessage(err), code: 'network' };
   }
 }
@@ -261,7 +195,7 @@ async function searchViaProxy(imdbId, type, langCode, options) {
 }
 
 /**
- * Search via official OpenSubtitles REST API (with API key — better results).
+ * Search via official OpenSubtitles REST API (with authentication token).
  */
 async function searchViaAPI(imdbId, type, langCode, options) {
   var lang2 = LANG_TO_2[langCode] || langCode.substring(0, 2);
@@ -287,7 +221,7 @@ async function searchViaAPI(imdbId, type, langCode, options) {
 
   var headers = {
     'User-Agent': USER_AGENT,
-    'Api-Key': getAppApiKey(options.apiKey),
+    'Api-Key': getAppApiKey(options.apiKey) || '',
     'Content-Type': 'application/json',
     Accept: 'application/json',
   };
@@ -351,13 +285,13 @@ async function searchViaAPI(imdbId, type, langCode, options) {
 
 /**
  * Search subtitles from OpenSubtitles.
- * Uses official API if apiKey is provided, otherwise falls back to Stremio proxy.
+ * Uses official API with authentication token or app key.
  *
  * @param {string} imdbId - IMDb ID (without 'tt' prefix)
  * @param {string} type - 'movie' or 'series'
  * @param {string} langCode - 3-letter language code
  * @param {object} [options]
- * @param {string} [options.apiKey] - OpenSubtitles API key
+ * @param {string} [options.apiKey] - OpenSubtitles API key (optional)
  * @param {number} [options.season]
  * @param {number} [options.episode]
  * @returns {Promise<Array>}
@@ -370,36 +304,31 @@ async function searchOpenSubtitles(imdbId, type, langCode, options) {
     var token = await ensureOsToken(options);
     if (token) options.osToken = token;
 
-    if (appKey) {
-      console.log('[opensubtitles] Using official API' + (token ? ' with login token' : ' with app key'));
-      var apiResults = await searchViaAPI(imdbId, type, langCode, options);
-      // Also fetch from proxy to combine results
-      var proxyResults = await searchViaProxy(imdbId, type, langCode, options).catch(function() { return []; });
-      // Merge: API results first (marked with star), then proxy
-      var seen = {};
-      var merged = [];
-      for (var i = 0; i < apiResults.length; i++) {
-        merged.push(apiResults[i]);
-      }
-      for (var j = 0; j < proxyResults.length; j++) {
-        merged.push(proxyResults[j]);
-      }
-      return merged;
-    } else {
-      console.log('[opensubtitles] Using Stremio proxy (no API key)');
-      return await searchViaProxy(imdbId, type, langCode, options);
+    console.log('[opensubtitles] Using official API' + (token ? ' with login token' : (appKey ? ' with app key' : ' with basic auth')));
+    
+    var apiResults = await searchViaAPI(imdbId, type, langCode, options);
+    
+    // Also fetch from proxy to combine results
+    var proxyResults = await searchViaProxy(imdbId, type, langCode, options).catch(function() { return []; });
+    
+    // Merge: API results first (marked with star), then proxy
+    var merged = [];
+    for (var i = 0; i < apiResults.length; i++) {
+      merged.push(apiResults[i]);
     }
+    for (var j = 0; j < proxyResults.length; j++) {
+      merged.push(proxyResults[j]);
+    }
+    
+    return merged;
   } catch (error) {
     console.error('[opensubtitles] Search error:', error.message);
     // Fallback to proxy if API fails
-    if (appKey) {
-      try {
-        return await searchViaProxy(imdbId, type, langCode, options);
-      } catch (e) {
-        return [];
-      }
+    try {
+      return await searchViaProxy(imdbId, type, langCode, options);
+    } catch (e) {
+      return [];
     }
-    return [];
   }
 }
 
