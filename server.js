@@ -583,6 +583,7 @@ function generateConfigPage(baseUrl) {
 '  </div>\n' +
 '  <script>\n' +
 '    function buildManifestUrl() {\n' +
+'      console.log("buildManifestUrl called");\n' +
 '      try {\n' +
 '        var lang = document.getElementById("lang").value;\n' +
 '        var opensubsKey = document.getElementById("opensubsKey") ? document.getElementById("opensubsKey").value.trim() : "";\n' +
@@ -604,6 +605,7 @@ function generateConfigPage(baseUrl) {
 '    }\n' +
  +
 '    function installAddon() {\n' +
+'      console.log("installAddon called");\n' +
 '      try {\n' +
 '        var manifestUrl = buildManifestUrl();\n' +
 '        if (!manifestUrl) {\n' +
@@ -619,6 +621,7 @@ function generateConfigPage(baseUrl) {
 '      }\n' +
 '    }\n' +
 '    function copyLink() {\n' +
+'      console.log("copyLink called");\n' +
 '      try {\n' +
 '        var manifestUrl = buildManifestUrl();\n' +
 '        if (!manifestUrl) {\n' +
