@@ -25,80 +25,7 @@ function osErrorMessage(err) {
   return err.message || 'Ping OpenSubtitles thất bại.';
 }
 
-/**
- * Validate OpenSubtitles.com username/password (Test Credentials).
- * Uses REST /login with username/password only (no API key required for basic auth).
- */
-async function pingOpenSubtitles(username, password, apiKey) {
-  username = String(username || '').trim();
-  password = String(password || '');
-  if (!username || !password) {
-    return { ok: false, error: 'Nhập username và password OpenSubtitles.com.', code: 'missing_credentials' };
-  }
 
-  var key = getAppApiKey(apiKey);
-  
-  try {
-    var headers = {
-      'User-Agent': USER_AGENT,
-      'Api-Key': key || '', // Empty string if no key
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    };
-    
-    var res = await axios.post(OFFICIAL_API_URL + '/login', {
-      username: username,
-      password: password,
-    }, {
-      timeout: 15000,
-      headers: headers,
-    });
-    
-    var token = res.data && res.data.token;
-    var user = (res.data && res.data.user) || {};
-    
-    if (!token) {
-      return { ok: false, error: 'Đăng nhập thành công nhưng không nhận được token.', code: 'token' };
-    }
-    
-    loginCache.set(username, { token: token, apiKey: key, at: Date.now() });
-    return {
-      ok: true,
-      token: token,
-      username: user.username || username,
-      allowedDownloads: user.allowed_downloads,
-      vip: Boolean(user.vip),
-      via: 'rest',
-    };
-  } catch (err) {
-    var status = err.response && err.response.status;
-    if (status === 401) {
-      return { ok: false, error: 'Sai username hoặc password OpenSubtitles.com.', code: 'unauthorized' };
-    }
-    if (status === 403) {
-      return { ok: false, error: 'Cần API Key để sử dụng OpenSubtitles API. Vui lòng tạo API Key tại opensubtitles.com/consumers', code: 'api_key_required' };
-    }
-    console.error('[opensubtitles] REST login failed:', osErrorMessage(err));
-    return { ok: false, error: osErrorMessage(err), code: 'network' };
-  }
-}
-
-async function ensureOsToken(options) {
-  if (!options) options = {};
-  if (options.osToken) return options.osToken;
-  var username = options.osUser;
-  if (username && loginCache.has(username)) {
-    var cached = loginCache.get(username);
-    if (cached && cached.token && (Date.now() - cached.at) < 50 * 60 * 1000) {
-      return cached.token;
-    }
-  }
-  if (username && options.osPass) {
-    var ping = await pingOpenSubtitles(username, options.osPass, options.apiKey);
-    if (ping.ok) return ping.token;
-  }
-  return '';
-}
 
 /**
  * Language code aliases for OpenSubtitles.
@@ -149,7 +76,7 @@ function getAliases(langCode) {
 
 /**
  * Search via Stremio public proxy (no key needed).
- * Improved with better error handling and fallback logic.
+ * Uses official Stremio OpenSubtitles V3 addon - no authentication required.
  */
 async function searchViaProxy(imdbId, type, langCode, options) {
   try {
@@ -160,6 +87,8 @@ async function searchViaProxy(imdbId, type, langCode, options) {
     }
 
     apiUrl += '.json';
+
+    console.log('[opensubtitles] Using Stremio V3 proxy:', apiUrl);
 
     var response = await axios.get(apiUrl, {
       timeout: 15000,
@@ -183,7 +112,7 @@ async function searchViaProxy(imdbId, type, langCode, options) {
         id: sub.id || ('os-' + idx),
         url: sub.url,
         lang: sub.lang,
-        title: '[OpenSubs] ' + (sub.SubFileName || sub.lang || 'Unknown'),
+        title: '[OpenSubs V3] ' + (sub.SubFileName || sub.lang || 'Unknown'),
         downloads: sub.downloads || 0,
         rating: sub.SubRating || 0,
       };
@@ -225,9 +154,6 @@ async function searchViaAPI(imdbId, type, langCode, options) {
     'Content-Type': 'application/json',
     Accept: 'application/json',
   };
-  if (options.osToken) {
-    headers.Authorization = 'Bearer ' + options.osToken;
-  }
 
   var response = await axios.get(OFFICIAL_API_URL + '/subtitles', {
     params: params,
@@ -285,7 +211,8 @@ async function searchViaAPI(imdbId, type, langCode, options) {
 
 /**
  * Search subtitles from OpenSubtitles.
- * Uses official API with authentication token or app key.
+ * Uses Stremio V3 proxy by default (no auth needed), 
+ * falls back to official API if API key is provided.
  *
  * @param {string} imdbId - IMDb ID (without 'tt' prefix)
  * @param {string} type - 'movie' or 'series'
@@ -299,36 +226,40 @@ async function searchViaAPI(imdbId, type, langCode, options) {
 async function searchOpenSubtitles(imdbId, type, langCode, options) {
   if (!options) options = {};
 
+  var appKey = getAppApiKey(options.apiKey);
+  
+  // Default: Use Stremio V3 proxy (no auth needed, like SubMaker V3 option)
+  console.log('[opensubtitles] Using Stremio V3 proxy (no auth required)');
+  
   try {
-    var appKey = getAppApiKey(options.apiKey);
-    var token = await ensureOsToken(options);
-    if (token) options.osToken = token;
-
-    console.log('[opensubtitles] Using official API' + (token ? ' with login token' : (appKey ? ' with app key' : ' with basic auth')));
+    var proxyResults = await searchViaProxy(imdbId, type, langCode, options);
     
-    var apiResults = await searchViaAPI(imdbId, type, langCode, options);
-    
-    // Also fetch from proxy to combine results
-    var proxyResults = await searchViaProxy(imdbId, type, langCode, options).catch(function() { return []; });
-    
-    // Merge: API results first (marked with star), then proxy
-    var merged = [];
-    for (var i = 0; i < apiResults.length; i++) {
-      merged.push(apiResults[i]);
+    // If API key is provided, also fetch from official API and merge
+    if (appKey) {
+      try {
+        console.log('[opensubtitles] Also fetching from official API with key');
+        var apiResults = await searchViaAPI(imdbId, type, langCode, options);
+        
+        // Merge: API results first (marked with star), then proxy
+        var merged = [];
+        for (var i = 0; i < apiResults.length; i++) {
+          merged.push(apiResults[i]);
+        }
+        for (var j = 0; j < proxyResults.length; j++) {
+          merged.push(proxyResults[j]);
+        }
+        
+        return merged;
+      } catch (apiError) {
+        console.error('[opensubtitles] API search failed, using proxy only:', apiError.message);
+        return proxyResults;
+      }
     }
-    for (var j = 0; j < proxyResults.length; j++) {
-      merged.push(proxyResults[j]);
-    }
     
-    return merged;
+    return proxyResults;
   } catch (error) {
-    console.error('[opensubtitles] Search error:', error.message);
-    // Fallback to proxy if API fails
-    try {
-      return await searchViaProxy(imdbId, type, langCode, options);
-    } catch (e) {
-      return [];
-    }
+    console.error('[opensubtitles] Proxy search error:', error.message);
+    return [];
   }
 }
 

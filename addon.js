@@ -97,18 +97,6 @@ const manifest = {
       default: 'Tiếng Việt [vie]',
     },
     {
-      key: 'osUser',
-      type: 'text',
-      title: 'OpenSubtitles.com Username',
-      required: false,
-    },
-    {
-      key: 'osToken',
-      type: 'text',
-      title: 'OpenSubtitles token (sau Test Credentials)',
-      required: false,
-    },
-    {
       key: 'opensubsKey',
       type: 'text',
       title: '🔑 OpenSubtitles API Key (tùy chọn, tạo tại opensubtitles.com)',
@@ -131,9 +119,6 @@ function parseConfig(configStr) {
     tmdbUser: '',
     tmdbSession: '',
     tmdbPass: '',
-    osUser: '',
-    osToken: '',
-    osPass: '',
   };
 
   if (!configStr) return config;
@@ -150,9 +135,6 @@ function parseConfig(configStr) {
     if (parsed.tmdbUser) config.tmdbUser = parsed.tmdbUser;
     if (parsed.tmdbSession) config.tmdbSession = parsed.tmdbSession;
     if (parsed.tmdbPass) config.tmdbPass = parsed.tmdbPass;
-    if (parsed.osUser) config.osUser = parsed.osUser;
-    if (parsed.osToken) config.osToken = parsed.osToken;
-    if (parsed.osPass) config.osPass = parsed.osPass;
   } catch (e) {
     // Try pipe-delimited format
     const parts = configStr.split('|');
@@ -164,9 +146,6 @@ function parseConfig(configStr) {
       if (key === 'tmdbUser') config.tmdbUser = value;
       if (key === 'tmdbSession') config.tmdbSession = value;
       if (key === 'tmdbPass') config.tmdbPass = value;
-      if (key === 'osUser') config.osUser = value;
-      if (key === 'osToken') config.osToken = value;
-      if (key === 'osPass') config.osPass = value;
     }
   }
 
@@ -227,9 +206,6 @@ async function searchSubtitles(type, id, addonConfig) {
   if (addonConfig && addonConfig.tmdbUser) config.tmdbUser = addonConfig.tmdbUser;
   if (addonConfig && addonConfig.tmdbSession) config.tmdbSession = addonConfig.tmdbSession;
   if (addonConfig && addonConfig.tmdbPass) config.tmdbPass = addonConfig.tmdbPass;
-  if (addonConfig && addonConfig.osUser) config.osUser = addonConfig.osUser;
-  if (addonConfig && addonConfig.osToken) config.osToken = addonConfig.osToken;
-  if (addonConfig && addonConfig.osPass) config.osPass = addonConfig.osPass;
 
   const parsed = parseStremioId(id);
   var season = parsed.season;
@@ -260,14 +236,11 @@ async function searchSubtitles(type, id, addonConfig) {
   // Launch all providers in parallel with better error handling
   const promises = [];
 
-  // OpenSubtitles — always enabled, better results with API key
+  // OpenSubtitles — always enabled, uses Stremio V3 proxy by default
   promises.push(
     searchOpenSubtitles(imdbId, type, langCode, {
       ...providerOptions,
       apiKey: config.opensubsKey || '',
-      osUser: config.osUser || '',
-      osPass: config.osPass || '',
-      osToken: config.osToken || '',
       tmdbId: originalId.indexOf('tm') === 0 ? originalId.replace(/^tm/, '') : '',
     })
       .catch(function(err) {

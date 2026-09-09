@@ -151,27 +151,7 @@ app.get('/health', function(req, res) {
   res.json({ status: 'ok', version: manifest.version, opensubtitlesAppKey: Boolean(getAppApiKey()) });
 });
 
-app.post('/api/opensubtitles/test', async function(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  var username = req.body && req.body.username;
-  var password = req.body && req.body.password;
-  console.log('[server] Testing OpenSubtitles credentials for:', username);
-  console.log('[server] Has API key:', Boolean(getAppApiKey()));
-  
-  var result = await pingOpenSubtitles(username, password);
-  console.log('[server] Test result:', result);
-  
-  if (!result.ok) {
-    var status = 401;
-    if (result.code === 'api_key_required') status = 403;
-    if (result.code === 'missing_credentials') status = 400;
-    return res.status(status).json(result);
-  }
-  res.json(result);
-});
+
 
 // ============================================================================
 // PROXY ENDPOINT — The heart of iOS compatibility
@@ -559,33 +539,11 @@ function generateConfigPage(baseUrl) {
 '      </div>\n' +
 '    </div>\n' +
 '    <div class="card">\n' +
-'      <div class="card-title"><span class="icon">\uD83D\uDCC4</span> OpenSubtitles.com</div>\n' +
-'      <div class="auth-method">\n' +
-'        <div class="auth-method-title"><input type="radio" checked readOnly> Auth (Recommended)</div>\n' +
-'        <div class="auth-method-desc">Uses your OpenSubtitles.com account. Requires username/password.</div>\n' +
-'      </div>\n' +
-'      <div class="tmdb-grid">\n' +
-'        <div>\n' +
-'          <div class="field">\n' +
-'            <label>Username</label>\n' +
-'            <input type="text" id="osUser" autocomplete="username" placeholder="Username">\n' +
-'          </div>\n' +
-'          <div class="field">\n' +
-'            <label>Password</label>\n' +
-'            <div class="password-wrap">\n' +
-'              <input type="password" id="osPass" autocomplete="current-password">\n' +
-'              <span class="lock-icon">\uD83D\uDD12</span>\n' +
-'              <button type="button" class="eye-btn" id="osEye" onclick="toggleOsPass()" aria-label="Hiện mật khẩu">\uD83D\uDC41</button>\n' +
-'            </div>\n' +
-'            <div class="hint">20 subtitles/day. Create a <a href="https://www.opensubtitles.com/en/users/sign_up" target="_blank" rel="noopener">free account</a> if you don\'t have one.</div>\n' +
-'          </div>\n' +
-'        </div>\n' +
-'        <div class="ping-panel">\n' +
-'          <p>Test OpenSubtitles.com credentials before saving</p>\n' +
-'          <button type="button" class="ping-btn" id="osPingBtn" onclick="testOsCredentials()">\u2713 Test Credentials</button>\n' +
-'          <div id="osPingStatus"></div>\n' +
-'          <div id="osPingDetails" style="display:none;margin-top:8px;padding:8px;background:rgba(0,0,0,0.2);border-radius:6px;font-size:11px;"></div>\n' +
-'        </div>\n' +
+'      <div class="card-title"><span class="icon">\uD83D\uDCC4</span> OpenSubtitles (V3)</div>\n' +
+'      <div class="field">\n' +
+'        <label>API Key (tùy chọn)</label>\n' +
+'        <input type="text" id="opensubsKey" placeholder="Nhập API key để có kết quả tốt hơn">\n' +
+'        <div class="hint">Dùng Stremio V3 proxy mặc định (không cần auth). API key tùy chọn để có thêm kết quả từ official API. Tạo key tại <a href="https://www.opensubtitles.com/consumers" target="_blank">opensubtitles.com/consumers</a></div>\n' +
 '      </div>\n' +
 '    </div>\n' +
 '    <div class="card">\n' +
@@ -627,93 +585,17 @@ function generateConfigPage(baseUrl) {
 '    var osToken = "";\n' +
 '    function buildManifestUrl() {\n' +
 '      var lang = document.getElementById("lang").value;\n' +
-'      var osUser = document.getElementById("osUser").value.trim();\n' +
-'      var osPass = document.getElementById("osPass").value;\n' +
+'      var opensubsKey = document.getElementById("opensubsKey").value.trim();\n' +
 '      var config = {};\n' +
 '      var langSelect = document.getElementById("lang");\n' +
 '      var langText = langSelect.options[langSelect.selectedIndex].text;\n' +
 '      config.lang = langText + " [" + lang + "]";\n' +
-'      if (osUser) config.osUser = osUser;\n' +
-'      if (osToken) config.osToken = osToken;\n' +
-'      else if (osPass) config.osPass = osPass;\n' +
+'      if (opensubsKey) config.opensubsKey = opensubsKey;\n' +
 '      var configStr = encodeURIComponent(JSON.stringify(config));\n' +
 '      var baseUrl = window.location.origin;\n' +
 '      return baseUrl + "/" + configStr + "/manifest.json";\n' +
 '    }\n' +
-'    function toggleOsPass() {\n' +
-'      var input = document.getElementById("osPass");\n' +
-'      input.type = input.type === "password" ? "text" : "password";\n' +
-'    }\n' +
-'    function testOsCredentials() {\n' +
-'      var user = document.getElementById("osUser").value.trim();\n' +
-'      var pass = document.getElementById("osPass").value;\n' +
-'      var status = document.getElementById("osPingStatus");\n' +
-'      var details = document.getElementById("osPingDetails");\n' +
-'      var btn = document.getElementById("osPingBtn");\n' +
-'      status.style.color = "var(--text-secondary)";\n' +
-'      details.style.display = "none";\n' +
-'      if (!user || !pass) {\n' +
-'        status.textContent = "Nhập username và password trước.";\n' +
-'        return;\n' +
-'      }\n' +
-'      btn.disabled = true;\n' +
-'      btn.textContent = "Đang ping...";\n' +
-'      console.log("Testing OpenSubtitles credentials for:", user);\n' +
-'      fetch("/api/opensubtitles/test", {\n' +
-'        method: "POST",\n' +
-'        headers: { "Content-Type": "application/json" },\n' +
-'        body: JSON.stringify({ username: user, password: pass })\n' +
-'      }).then(function(res) { return res.json().then(function(data) { return { ok: res.ok, data: data }; }); })\n' +
-'      .then(function(result) {\n' +
-'        if (result.data && result.data.ok) {\n' +
-'          osToken = result.data.token || "";\n' +
-'          status.style.color = "var(--success)";\n' +
-'          var extra = result.data.allowedDownloads != null ? " · " + result.data.allowedDownloads + " sub/day" : "";\n' +
-'          status.textContent = "✓ Credentials valid — " + (result.data.username || user) + extra;\n' +
-'          \n' +
-'          // Show detailed information\n' +
-'          details.style.display = "block";\n' +
-'          details.style.color = "var(--text-secondary)";\n' +
-'          var detailHtml = "<div><strong>Auth Method:</strong> " + (result.data.via || "API") + "</div>";\n' +
-'          if (result.data.vip) {\n' +
-'            detailHtml += "<div><strong>Account:</strong> VIP ✓</div>";\n' +
-'          } else {\n' +
-'            detailHtml += "<div><strong>Account:</strong> Free (20 sub/day)</div>";\n' +
-'          }\n' +
-'          if (result.data.allowedDownloads != null) {\n' +
-'            detailHtml += "<div><strong>Remaining Downloads:</strong> " + result.data.allowedDownloads + "</div>";\n' +
-'          }\n' +
-'          detailHtml += "<div><strong>Username:</strong> " + (result.data.username || user) + "</div>";\n' +
-'          details.innerHTML = detailHtml;\n' +
-'        } else {\n' +
-'          osToken = "";\n' +
-'          status.style.color = "#f87171";\n' +
-'          status.textContent = "✗ " + (result.data && result.data.error) || "Ping thất bại.";\n' +
-'          \n' +
-'          // Show error details\n' +
-'          details.style.display = "block";\n' +
-'          details.style.color = "#f87171";\n' +
-'          var errorCode = result.data && result.data.code ? result.data.code : "unknown";\n' +
-'          details.innerHTML = "<div><strong>Error Code:</strong> " + errorCode + "</div>" +\n' +
-'                            "<div><strong>Message:</strong> " + (result.data && result.data.error || "Unknown error") + "</div>";\n' +
-'        }\n' +
-'      }).catch(function(err) {\n' +
-'        osToken = "";\n' +
-'        status.style.color = "#f87171";\n' +
-'        var errorMsg = "Không kết nối được server.";\n' +
-'        if (err.message) {\n' +
-'          errorMsg = "Lỗi: " + err.message;\n' +
-'        }\n' +
-'        status.textContent = "✗ " + errorMsg;\n' +
-'        details.style.display = "block";\n' +
-'        details.style.color = "#f87171";\n' +
-'        details.innerHTML = "<div><strong>Error:</strong> " + (err.message || "Network connection failed") + "</div>";\n' +
-'        console.error("OpenSubtitles test error:", err);\n' +
-'      }).then(function() {\n' +
-'        btn.disabled = false;\n' +
-'        btn.textContent = "\\u2713 Test Credentials";\n' +
-'      });\n' +
-'    }\n' +
+ +
 '    function installAddon() {\n' +
 '      var manifestUrl = buildManifestUrl();\n' +
 '      var stremioUrl = manifestUrl.replace(/^https?:\\/\\//, "stremio://");\n' +
