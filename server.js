@@ -722,7 +722,7 @@ function generateConfigPage(baseUrl) {
 '      btn.disabled = true;\n' +
 '      btn.textContent = "Đang ping...";\n' +
 '      console.log("Testing OpenSubtitles credentials for:", user);\n' +
-'      fetch("http://localhost:7000/api/opensubtitles/test", {\n' +
+'      fetch("/api/opensubtitles/test", {\n' +
 '        method: "POST",\n' +
 '        headers: { "Content-Type": "application/json" },\n' +
 '        body: JSON.stringify({ username: user, password: pass })\n' +
