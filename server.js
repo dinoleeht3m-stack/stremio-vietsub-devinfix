@@ -539,11 +539,20 @@ function generateConfigPage(baseUrl) {
 '      </div>\n' +
 '    </div>\n' +
 '    <div class="card">\n' +
-'      <div class="card-title"><span class="icon">\uD83D\uDCC4</span> OpenSubtitles (V3)</div>\n' +
+'      <div class="card-title"><span class="icon">\uD83D\uDCC4</span> OpenSubtitles (Auth)</div>\n' +
 '      <div class="field">\n' +
-'        <label>API Key (tùy chọn)</label>\n' +
-'        <input type="text" id="opensubsKey" placeholder="Nhập API key để có kết quả tốt hơn">\n' +
-'        <div class="hint">Dùng Stremio V3 proxy mặc định (không cần auth). API key tùy chọn để có thêm kết quả từ official API. Tạo key tại <a href="https://www.opensubtitles.com/consumers" target="_blank">opensubtitles.com/consumers</a></div>\n' +
+'        <label>API Key</label>\n' +
+'        <input type="text" id="opensubsKey" placeholder="Nhập API Key">\n' +
+'        <div class="hint">Tạo API Key tại <a href="https://www.opensubtitles.com/consumers" target="_blank">opensubtitles.com/consumers</a></div>\n' +
+'      </div>\n' +
+'      <div class="field">\n' +
+'        <label>Username</label>\n' +
+'        <input type="text" id="osUser" autocomplete="username" placeholder="Username">\n' +
+'      </div>\n' +
+'      <div class="field">\n' +
+'        <label>Password</label>\n' +
+'        <input type="password" id="osPass" autocomplete="current-password">\n' +
+'        <div class="hint">Cần cả API Key, Username và Password để sử dụng OpenSubtitles REST API.</div>\n' +
 '      </div>\n' +
 '    </div>\n' +
 '    <div class="card">\n' +
@@ -584,16 +593,21 @@ function generateConfigPage(baseUrl) {
 '  <script>\n' +
 '    var osToken = "";\n' +
 '    function buildManifestUrl() {\n' +
-'      var lang = document.getElementById("lang").value;\n' +
-'      var opensubsKey = document.getElementById("opensubsKey").value.trim();\n' +
-'      var config = {};\n' +
-'      var langSelect = document.getElementById("lang");\n' +
-'      var langText = langSelect.options[langSelect.selectedIndex].text;\n' +
-'      config.lang = langText + " [" + lang + "]";\n' +
-'      if (opensubsKey) config.opensubsKey = opensubsKey;\n' +
-'      var configStr = encodeURIComponent(JSON.stringify(config));\n' +
-'      var baseUrl = window.location.origin;\n' +
-'      return baseUrl + "/" + configStr + "/manifest.json";\n' +
+'      try {\n' +
+'        var lang = document.getElementById("lang").value;\n' +
+'        var opensubsKey = document.getElementById("opensubsKey") ? document.getElementById("opensubsKey").value.trim() : "";\n' +
+'        var config = {};\n' +
+'        var langSelect = document.getElementById("lang");\n' +
+'        var langText = langSelect.options[langSelect.selectedIndex].text;\n' +
+'        config.lang = langText + " [" + lang + "]";\n' +
+'        if (opensubsKey) config.opensubsKey = opensubsKey;\n' +
+'        var configStr = encodeURIComponent(JSON.stringify(config));\n' +
+'        var baseUrl = window.location.origin;\n' +
+'        return baseUrl + "/" + configStr + "/manifest.json";\n' +
+'      } catch (e) {\n' +
+'        console.error("buildManifestUrl error:", e);\n' +
+'        return "";\n' +
+'      }\n' +
 '    }\n' +
  +
 '    function installAddon() {\n' +
