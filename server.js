@@ -603,6 +603,7 @@ function generateConfigPage(baseUrl) {
 '        return "";\n' +
 '      }\n' +
 '    }\n' +
+'    window.buildManifestUrl = buildManifestUrl;\n' +
  +
 '    function installAddon() {\n' +
 '      console.log("installAddon called");\n' +
@@ -646,6 +647,8 @@ function generateConfigPage(baseUrl) {
 '        alert("Lỗi khi copy link: " + e.message);\n' +
 '      }\n' +
 '    }\n' +
+'    window.installAddon = installAddon;\n' +
+'    window.copyLink = copyLink;\n' +
 '  </script>\n' +
 '</body>\n' +
 '</html>';
