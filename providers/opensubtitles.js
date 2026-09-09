@@ -138,7 +138,7 @@ async function searchViaAPI(imdbId, type, langCode, options) {
   if (options.tmdbId) {
     params.tmdb_id = options.tmdbId;
   } else {
-    params.imdb_id = 'tt' + imdbId;
+    params.imdb_id = String(imdbId).replace(/^tt/, '');
   }
 
   if (type === 'series' && options.season) {
