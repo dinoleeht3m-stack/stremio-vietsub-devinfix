@@ -349,6 +349,7 @@ function generateConfigPage(baseUrl) {
 '  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
 '  <title>VietSub Proxy - Stremio Addon</title>\n' +
 '  <meta name="description" content="Addon phu de Tieng Viet cho Stremio. Ho tro OpenSubtitles, SubDL, SubSource. Tuong thich iOS.">\n' +
+'  <link rel="icon" href="data:image/svg+xml,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><text y=\'0.9em\' font-size=\'90\'>🇻🇳</text></svg>">\n' +
 '  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">\n' +
 '  <style>\n' +
 '    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }\n' +
@@ -502,7 +503,6 @@ function generateConfigPage(baseUrl) {
 '    #osPingStatus { font-size:13px; line-height:1.4; min-height:1.4em; font-weight:600; }\n' +
 '    #osPingDetails { font-size:12px; line-height:1.5; }\n' +
 '    #osPingDetails strong { color: var(--text-primary); }\n' +
- +
 '    .steps { display:flex; flex-direction:column; gap:12px; }\n' +
 '    .step { display:flex; gap:12px; align-items:flex-start; }\n' +
 '    .step-num {\n' +
@@ -520,7 +520,7 @@ function generateConfigPage(baseUrl) {
 '<body>\n' +
 '  <div class="container">\n' +
 '    <div class="header">\n' +
-'      <div class="logo">\xF0\x9F\x87\xBB\xF0\x9F\x87\xB3</div>\n' +
+'      <div class="logo">\uD83C\uDDFB\uD83C\uDDF3</div>\n' +
 '      <h1>VietSub Proxy</h1>\n' +
 '      <p>Addon ph\u1EE5 \u0111\u1EC7 cho Stremio \u2014 OpenSubtitles.com, \u0111a ID format, x\u1EED l\u00FD server-side, t\u01B0\u01A1ng th\u00EDch 100% iOS</p>\n' +
 '      <div class="badge-row">\n' +
@@ -559,7 +559,6 @@ function generateConfigPage(baseUrl) {
 '        </div>\n' +
 '        <div class="hint" style="margin:0">Dùng Auth OpenSubtitles.com phía trên. Không cần dán API key.</div>\n' +
 '      </div>\n' +
- +
 '    </div>\n' +
 '    <div class="card">\n' +
 '      <div class="card-title"><span class="icon">\u2699\uFE0F</span> C\u00E1ch ho\u1EA1t \u0111\u1ED9ng</div>\n' +
@@ -572,7 +571,7 @@ function generateConfigPage(baseUrl) {
 '    </div>\n' +
 '    <div class="card">\n' +
 '      <div class="card-title"><span class="icon">\uD83D\uDE80</span> C\u00E0i \u0111\u1EB7t</div>\n' +
-'      <button class="install-btn" onclick="installAddon()">\u26A1 C\u00E0i v\u00E0o Stremio</button>\n' +
+'      <button class="install-btn" type="button" onclick="installAddon()">\u26A1 C\u00E0i v\u00E0o Stremio</button>\n' +
 '      <button class="copy-btn" onclick="copyLink()">\uD83D\uDCCB Copy link manifest</button>\n' +
 '      <div id="manifestUrl" style="margin-top:10px;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:11px;color:var(--text-muted);word-break:break-all;display:none;"></div>\n' +
 '    </div>\n' +
@@ -615,6 +614,9 @@ function generateConfigPage(baseUrl) {
 '        }\n' +
 '        var stremioUrl = manifestUrl.replace(/^https?:\\/\\//, "stremio://");\n' +
 '        console.log("Installing addon with URL:", stremioUrl);\n' +
+'        var urlDisplay = document.getElementById("manifestUrl");\n' +
+'        urlDisplay.textContent = manifestUrl;\n' +
+'        urlDisplay.style.display = "block";\n' +
 '        window.location.href = stremioUrl;\n' +
 '      } catch (e) {\n' +
 '        console.error("Install error:", e);\n' +
