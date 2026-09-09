@@ -112,7 +112,7 @@ async function searchViaProxy(imdbId, type, langCode, options) {
         id: sub.id || ('os-' + idx),
         url: sub.url,
         lang: sub.lang,
-        title: '[OpenSubs V3] ' + (sub.SubFileName || sub.lang || 'Unknown'),
+        title: 'VietSub Proxy · OpenSubs V3 — ' + (sub.SubFileName || sub.lang || 'Unknown'),
         downloads: sub.downloads || 0,
         rating: sub.SubRating || 0,
       };
@@ -193,7 +193,7 @@ async function searchViaAPI(imdbId, type, langCode, options) {
           id: 'os-api-' + fileId,
           url: dlResponse.data.link,
           lang: langCode,
-          title: '[OpenSubs\u2605] ' + fileName,
+          title: 'VietSub Proxy · OpenSubs API — ' + fileName,
           downloads: attrs.download_count || 0,
           rating: attrs.ratings || 0,
         });
